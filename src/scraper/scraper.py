@@ -22,7 +22,6 @@ async def backoff_retry(func, max_retries=5):
 async def get_links(page: Page) -> List[str]:
     pages_counter = 1
     links = []
-    # await page.setRequestInterception(True)
 
     while True:
         # dont load images, css, fonts, etc
@@ -36,8 +35,6 @@ async def get_links(page: Page) -> List[str]:
             "nodes => nodes.map(n => n.querySelector('a').href)"
         )
 
-        # remove the "venta-de-autos-usados/" from the links
-
         scraped_links = [clean_link(link) for link in list(set(scraped_links))]
         ic(f"Scraped {len(scraped_links)} links")
         if len(scraped_links) == 0:
@@ -46,6 +43,5 @@ async def get_links(page: Page) -> List[str]:
 
         pages_counter += 1
         links.extend(scraped_links)
-        break
 
     return links

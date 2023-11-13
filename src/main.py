@@ -1,19 +1,11 @@
 import asyncio
-from typing import List
-import re
 
-import os
 from dotenv import load_dotenv
-import libsql_client
 
 from database.connection import make_connection
-
-from config.settings import URL
 from scraper.scraper import get_links
 
-
 from pyppeteer import launch
-from pyppeteer.page import Page
 from icecream import ic
 
 import time
@@ -38,15 +30,13 @@ async def main():
     conn = await make_connection()
     browser = await launch()
     page = await browser.newPage()
-    # links = await get_links(page)
-
-    links = ["https://neoauto.com/auto/usado/audi-a4-2014-1753766"]
+    links = await get_links(page)
 
     for link in links:
         # await page.goto(URL + link)
         ic(f"Scraping {link}")
 
-        await page.goto("https://neoauto.com/auto/usado/toyota-raize-2023-1755782")
+        await page.goto(link)
 
         # reload the page before scraping
         await page.reload()
@@ -99,10 +89,6 @@ async def main():
         model = title.split(" ")[1:-1][0]
 
         ic("Inserting into database")
-
-        ic(link, title, model, price, kms, ccs, fuel,
-           transmission, category, brand, year_of_manufacture)
-
         async with conn:
             await conn.execute(f"""
                 INSERT INTO vehicles (
@@ -113,10 +99,10 @@ async def main():
                 '{transmission}', '{category}', '{brand}', '{year_of_manufacture}')
                 """)
 
-        await browser.close()
-        await conn.close()
         break
 
+    await browser.close()
+    await conn.close()
     pass
 
 
