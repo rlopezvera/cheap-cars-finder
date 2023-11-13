@@ -1,0 +1,4 @@
+.venv/
+.git/
+# ignore the pycaches
+__pycache__/
