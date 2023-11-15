@@ -2,3 +2,5 @@
 .git/
 # ignore the pycaches
 __pycache__/
+*.pyc
+.dockerignore

@@ -99,8 +99,6 @@ async def main():
                 '{transmission}', '{category}', '{brand}', '{year_of_manufacture}')
                 """)
 
-        break
-
     await browser.close()
     await conn.close()
     pass
