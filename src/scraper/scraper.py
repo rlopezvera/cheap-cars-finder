@@ -19,6 +19,7 @@ async def backoff_retry(func, max_retries=5):
     raise Exception("Max retries reached")
 
 
+# only needed for the first time
 async def get_links(page: Page) -> List[str]:
     pages_counter = 1
     links = []

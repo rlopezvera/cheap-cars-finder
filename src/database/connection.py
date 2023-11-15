@@ -27,8 +27,8 @@ async def make_connection() -> libsql_client.Client:
     ic("Creating table vehicles if not exists")
     _ = await client.execute("""
             CREATE TABLE IF NOT EXISTS
-            vehicles (
-            id INT AUTO_INCREMENT PRIMARY KEY,
+            cars (
+            id INTEGER PRIMARY KEY,
             link VARCHAR(255),
             title VARCHAR(255),
             model VARCHAR(100),
@@ -39,6 +39,7 @@ async def make_connection() -> libsql_client.Client:
             transmission_type VARCHAR(50),
             category VARCHAR(50),
             brand VARCHAR(50),
+            version VARCHAR(50),
             year_of_manufacture YEAR
     );
 

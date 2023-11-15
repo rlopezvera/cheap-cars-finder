@@ -2,16 +2,16 @@ import asyncio
 
 from dotenv import load_dotenv
 
+
+from bs4 import BeautifulSoup
 from database.connection import make_connection
+import requests
 from scraper.scraper import get_links
 
 from pyppeteer import launch
 from icecream import ic
 
 import time
-
-from scraper.utils import check_length_of_one
-
 
 load_dotenv()
 
@@ -32,72 +32,77 @@ async def main():
     page = await browser.newPage()
     links = await get_links(page)
 
+    # links = ["https://neoauto.com/auto/usado/honda-cr-v-2017-1756405"]
+
     for link in links:
-        # await page.goto(URL + link)
         ic(f"Scraping {link}")
 
-        await page.goto(link)
+        html_page = requests.get(link).text
 
-        # reload the page before scraping
-        await page.reload()
+        soup = BeautifulSoup(html_page, "html.parser")
 
-        title = await page.querySelectorEval(
-            "h1",
-            "node => node.innerText"
-        )
+        data = {
+            "Año Modelo": None,
+            "Transmisión": None,  # Note the accent in 'Transmisión'
+            "Combustible": None,
+            "Cilindrada": None,
+            "Kilometraje": None,
+            "Categoría": None,
+            "Versión": None,
+        }
+        for div in soup.find_all("div", class_="flex items-start gap-[10px] py-2 box-border md:py-[10px]"):
+            # Assuming the category is always in a div with class 'text-xs' and the value is in 'text-base'
+            category = div.find("div", class_="text-xs")
+            value = div.find("div", class_="text-base")
 
-        price_1 = await page.xpath(
-            """//*[@id="__next"]/div/main/div[2]/div[1]/article/div[1]/div[3]/div/div/p"""
-        )
+            # Check if both category and value are found
+            if category and value:
+                category_text = category.get_text(strip=True)
+                value_text = value.get_text(strip=True)
 
-        price_2 = await page.xpath(
-            """
-            //*[@id="__next"]/div/main/div[2]/div[1]/article/div[1]/div[3]/div/div[2]/span[2]"""
-        )
+                # Update the data map if the category is in the map
+                if category_text in data:
+                    data[category_text] = value_text
 
-        price = price_1 + price_2
+        title = soup.find("h1")
 
-        kms = await page.xpath("""//*[@id="__next"]/div/main/div[2]/div[1]/article/div[2]/div[2]/div[2]/div[2]""")
+        title = title.get_text(
+            strip=True) if title else "Sin Titulo Encontrado"
 
-        transmission = await page.xpath("""//*[@id="__next"]/div/main/div[2]/div[1]/article/div[2]/div[3]/div[2]/div[2]""")
+        price = soup.find(
+            "p", class_="block font-ubuntu font-bold text-[1.375rem] leading-[1.875rem] md:text-4xl md:leading-[2.75rem]")
 
-        fuel = await page.xpath("""//*[@id="__next"]/div/main/div[2]/div[1]/article/div[2]/div[4]/div[2]/div[2]""")
+        if price == None:
+            price = soup.find(
+                "span", class_="block font-ubuntu font-bold text-[1.375rem] leading-[1.875rem] md:text-4xl md:leading-[2.75rem]")
 
-        ccs = await page.xpath("""//*[@id="__next"]/div/main/div[2]/div[1]/article/div[2]/div[5]/div[2]/div[2]""")
-
-        category = await page.xpath("""//*[@id="__next"]/div/main/div[2]/div[1]/article/div[2]/div[6]/div[2]/div[2]""")
-
-        if check_length_of_one(price,
-                               kms,
-                               ccs,
-                               fuel,
-                               transmission,
-                               category) is False:
-            ic("Error")
-            break
-
-        price = await page.evaluate('(element) => element.textContent', price[0])
-        kms = await page.evaluate('(element) => element.textContent', kms[0])
-        ccs = await page.evaluate('(element) => element.textContent', ccs[0])
-        fuel = await page.evaluate('(element) => element.textContent', fuel[0])
-        transmission = await page.evaluate('(element) => element.textContent', transmission[0])
-        category = await page.evaluate('(element) => element.textContent', category[0])
+        if price != None:
+            price = price.get_text(strip=True)
 
         # some cleaning
         brand = title.split(" ")[0]
         year_of_manufacture = title.split(" ")[-1]
         model = title.split(" ")[1:-1][0]
 
+        # ic(price, kms, ccs, fuel, transmission, category)
+        # ic("Error")
+        # break
+
+        ccs = data["Cilindrada"]
+        kms = data["Kilometraje"]
+        fuel = data["Combustible"]
+        transmission = data["Transmisión"]
+        category = data["Categoría"]
+        version = data["Versión"]
+
         ic("Inserting into database")
-        async with conn:
-            await conn.execute(f"""
-                INSERT INTO vehicles (
-    link, title, model, price, kilometers, cc, fuel_type,
-                transmission_type, category, brand, year_of_manufacture)
-                VALUES (
-                '{link}', '{title}', '{model}', '{price}', '{kms}', '{ccs}', '{fuel}',
-                '{transmission}', '{category}', '{brand}', '{year_of_manufacture}')
-                """)
+        await conn.execute(f"""
+            INSERT INTO cars ( link, title, model, price, kilometers, cc, fuel_type,
+            transmission_type, category, brand, version, year_of_manufacture)
+            VALUES (
+            '{link}', '{title}', '{model}', '{price}', '{kms}', '{ccs}', '{fuel}',
+            '{transmission}', '{category}', '{brand}', '{version}', '{year_of_manufacture}')
+            """)
 
     await browser.close()
     await conn.close()
