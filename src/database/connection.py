@@ -29,6 +29,7 @@ async def make_connection() -> libsql_client.Client:
             CREATE TABLE IF NOT EXISTS
             cars (
             id INTEGER PRIMARY KEY,
+            parsed_at TIMESTAMP,
             link VARCHAR(255),
             title VARCHAR(255),
             model VARCHAR(100),

@@ -28,9 +28,7 @@ def ic_log_timestamp() -> None:
 async def main():
     ic_log_timestamp()
     conn = await make_connection()
-    browser = await launch()
-    page = await browser.newPage()
-    links = await get_links(page)
+    links = get_links(days_ago="last_month")
 
     # links = ["https://neoauto.com/auto/usado/honda-cr-v-2017-1756405"]
 
@@ -94,17 +92,18 @@ async def main():
         transmission = data["Transmisión"]
         category = data["Categoría"]
         version = data["Versión"]
+        parsed_at = time.strftime('%d/%m/%y %H:%M:%S')
 
         ic("Inserting into database")
         await conn.execute(f"""
-            INSERT INTO cars ( link, title, model, price, kilometers, cc, fuel_type,
+            INSERT INTO cars (
+            parsed_at, link, title, model, price, kilometers, cc, fuel_type,
             transmission_type, category, brand, version, year_of_manufacture)
             VALUES (
-            '{link}', '{title}', '{model}', '{price}', '{kms}', '{ccs}', '{fuel}',
+            '{parsed_at}', '{link}', '{title}', '{model}', '{price}', '{kms}', '{ccs}', '{fuel}',
             '{transmission}', '{category}', '{brand}', '{version}', '{year_of_manufacture}')
             """)
 
-    await browser.close()
     await conn.close()
     pass
 
