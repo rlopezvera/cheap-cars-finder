@@ -8,7 +8,6 @@ from database.connection import make_connection
 import requests
 from scraper.scraper import get_links
 
-from pyppeteer import launch
 from icecream import ic
 
 import time
@@ -28,7 +27,7 @@ def ic_log_timestamp() -> None:
 async def main():
     ic_log_timestamp()
     conn = await make_connection()
-    links = get_links(days_ago="last_month")
+    links = get_links(days_ago="today")
 
     # links = ["https://neoauto.com/auto/usado/honda-cr-v-2017-1756405"]
 

@@ -5,3 +5,5 @@ __pycache__/
 *.pyc
 .dockerignore
 .env
+# ignore DS_Store
+.DS_Store
