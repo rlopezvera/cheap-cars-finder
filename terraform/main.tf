@@ -16,8 +16,11 @@ resource "aws_ecs_cluster" "cheapo_cluster" {
   name = "cheapo-cluster" # Name your cluster here
 }
 
+resource "aws_cloudwatch_log_group" "ecs_logs" {
+  name = "/ecs/cheapo-cluster-logs"
+}
 
-# main.tf
+
 resource "aws_ecs_task_definition" "cheapo_task" {
   family                   = "cheapo-first-task" # Name your task
   container_definitions    = <<DEFINITION
@@ -33,7 +36,15 @@ resource "aws_ecs_task_definition" "cheapo_task" {
         }
       ],
       "memory": 1024,
-      "cpu": 512
+      "cpu": 512,
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "${aws_cloudwatch_log_group.ecs_logs.name}",
+          "awslogs-region": "us-east-1", 
+          "awslogs-stream-prefix": "ecs"
+        }
+      }
     }
   ]
   DEFINITION
