@@ -32,15 +32,15 @@ resource "aws_ecs_task_definition" "cheapo_task" {
           "hostPort": 5000
         }
       ],
-      "memory": 512,
-      "cpu": 256
+      "memory": 1024,
+      "cpu": 512
     }
   ]
   DEFINITION
   requires_compatibilities = ["FARGATE"] # use Fargate as the launch type
   network_mode             = "awsvpc"    # add the AWS VPN network mode as this is required for Fargate
-  memory                   = 512         # Specify the memory the container requires
-  cpu                      = 256         # Specify the CPU the container requires
+  memory                   = 1024         # Specify the memory the container requires
+  cpu                      = 512         # Specify the CPU the container requires
   execution_role_arn       = "${aws_iam_role.ecsTaskExecutionRole.arn}"
 }
 
@@ -131,4 +131,13 @@ resource "aws_cloudwatch_event_target" "run_ecs_task" {
     }
   }
 }
+
+output "cluster_name" {
+  value = aws_ecs_cluster.cheapo_cluster.name
+}
+
+output "ecr_repo_url" {
+  value = aws_ecr_repository.cheapo_ecr_repo.repository_url
+}
+
 
