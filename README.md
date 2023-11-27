@@ -49,9 +49,3 @@ This project is a Python-based web scraping tool that utilizes Beautiful Soup to
    ```
    terraform apply
    ```
-
-## Contributing
-Contributions to this project are welcome. Please fork the repository and submit a pull request with your changes.
-
-## License
-[MIT License](LICENSE)
